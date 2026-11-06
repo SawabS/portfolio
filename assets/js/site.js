@@ -1,4 +1,4 @@
-/* Page behaviour: reveals, the tour progress, XP, the tokenizer widgets, the career path,
+/* Page behaviour: reveals, XP, the tokenizer widgets, the career path,
  * project filter, the pinned stack, the quiz and the small things in the contact band. */
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
@@ -335,12 +335,12 @@
   /* ── The stack: six plates that come apart as you scroll ── */
   const stack = (() => {
     const LAYERS = [
-      { name: 'Agents and apps', hue: 'purple', what: 'Where a model becomes something people use.', tools: ['Model Context Protocol', 'LangChain', 'AnythingLLM', 'Flask', 'Prompt engineering'] },
+      { name: 'Agents and apps', hue: 'purple', what: 'Where a model becomes something people use.', tools: ['Agentic workflows', 'Model Context Protocol', 'LangChain', 'AnythingLLM', 'Flask', 'Prompt engineering'] },
       { name: 'Retrieval', hue: 'teal', what: 'Grounding answers in documents the model has never seen.', tools: ['RAG pipelines', 'ChromaDB', 'Document recovery'] },
       { name: 'Models and evaluation', hue: 'pink', what: 'Benchmarks that say whether a Kurdish model actually got better.', tools: ['Benchmark design', 'LLM fine-tuning support', 'Tokenization research', 'Hugging Face', 'OpenRouter', 'Vertex AI'] },
-      { name: 'Data pipelines', hue: 'orange', what: 'Kurdish text is scarce, so collecting it is half the job.', tools: ['Python', 'Web scraping', 'Telethon', 'Async pipelines', 'Conda', 'Jupyter'] },
+      { name: 'Data pipelines', hue: 'orange', what: 'Collecting, cleaning and structuring data before any model sees it.', tools: ['Python', 'Web scraping', 'Telethon', 'Async pipelines', 'Conda', 'Jupyter'] },
       { name: 'Serving and monitoring', hue: 'blue', what: 'Keeping inference fast, measured and sized for real load.', tools: ['vLLM', 'GPU infrastructure', 'Load testing', 'Prometheus', 'Grafana', 'Langfuse'] },
-      { name: 'Servers and networks', hue: 'green', what: 'The on-premise base, and the telecom work I started on.', tools: ['Linux', 'Proxmox', 'Bash', 'Access control', 'Huawei NetEco', 'iMaster MAE', 'Nokia NetAct'] },
+      { name: 'Servers and networks', hue: 'green', what: 'The on-premise base that keeps data in the building, and the telecom work I started on.', tools: ['Linux', 'Proxmox', 'Bash', 'Access control', 'Service isolation','Huawei NetEco', 'iMaster MAE', 'Nokia NetAct'] },
     ];
     const list = $('#stackList'), svg = $('#stackSvg'), pin = $('#stackPin');
     list.innerHTML = LAYERS.map((l, i) => `<button class="stack-item stack-item--${l.hue}" type="button" data-i="${i}" aria-pressed="false"><span class="stack-item__name">${l.name}</span><span class="stack-item__more"><span class="stack-item__inner"><span class="stack-item__what">${l.what}</span><span class="stack-item__tools">${l.tools.map(t => `<span class="badge badge--subtle badge--${l.hue}">${t}</span>`).join('')}</span></span></span></button>`).join('');
@@ -417,27 +417,12 @@
   })();
   const inks = $$('.ink', stmt);
 
-  const segs = $$('.tour__seg');
-  const targets = segs.map(a => $(a.getAttribute('href')));
-  let tops = [];
-  function measure() {
-    tops = targets.map(t => t.getBoundingClientRect().top + scrollY);
-    tops.push(document.documentElement.scrollHeight - innerHeight * .7 + 1);  // where the reading line sits at the very end
-    onScroll();
-  }
+  const measure = () => onScroll();
   window.__measure = measure;
 
   let ticking = false;
   function onScroll() {
     ticking = false;
-    const y = scrollY + innerHeight * .3;
-    segs.forEach((seg, i) => {
-      const f = clamp((y - tops[i]) / ((tops[i + 1] - tops[i]) || 1));
-      seg.style.setProperty('--f', f);
-      const cur = y >= tops[i] && y < tops[i + 1];
-      seg.classList.toggle('is-current', cur);
-      if (cur) seg.setAttribute('aria-current', 'true'); else seg.removeAttribute('aria-current');
-    });
     if (!calm) {
       const r = stmt.getBoundingClientRect();
       const p = clamp((innerHeight * .86 - r.top) / (r.height + innerHeight * .34));
@@ -453,6 +438,105 @@
   addEventListener('load', measure);
   document.fonts && document.fonts.ready.then(() => { measure(); window.__path.layoutLine(); });
   measure();
+
+  /* ── Data boundaries: pick a kind of data, see where it may go ── */
+  (function boundary() {
+    // each line is a list of [text, mask]; masked parts are what redaction strips before anything leaves
+    const KINDS = {
+      public: {
+        line: [['Help article: “How to reset your home router”']],
+        plain: { go: { api: 'yes', cloud: 'yes', local: 'yes' }, best: 'api', title: 'Send it anywhere', text: "It's already public, so use the fastest, cheapest model that does the job well.", send: 'The article itself', keep: 'Nothing to hold back' },
+      },
+      policies: {
+        line: [['HR policy draft: “Remote work rules, v3” · approved by '], ['R. Ali', '[NAME]']],
+        plain: { go: { api: 'care', cloud: 'yes', local: 'yes' }, best: 'cloud', title: 'Keep it in your own tenant', text: 'Internal but not secret. A private deployment works, or an API with no-training and no-retention terms.', send: 'The policy text', keep: 'Names of the people behind decisions' },
+        red: { go: { api: 'care', cloud: 'yes', local: 'yes' }, best: 'cloud', title: 'Names out, same answer', text: 'Removing names helps, but the policy is still internal. Keep it in your tenant, or use an API with strict terms.', send: 'The policy text', keep: 'Names, already removed' },
+      },
+      customers: {
+        line: [['Ticket #'], ['4410-22', '[ID]'], [' · '], ['Dilan K.', '[NAME]'], [' · '], ['0750 000 0000', '[PHONE]'], [' · “My bill doubled this month”']],
+        plain: { go: { api: 'no', cloud: 'care', local: 'yes' }, best: 'local', title: 'Keep it on-premise', text: 'This is personal data. Process it locally, or strip the identifiers before anything leaves.', send: 'Nothing yet', keep: 'Name, phone number, account ID' },
+        red: { go: { api: 'care', cloud: 'yes', local: 'yes' }, best: 'cloud', title: 'Redacted, it can travel', text: 'With names, numbers and IDs replaced, the complaint is safe for a private deployment, and for an API with strict terms.', send: 'The complaint text', keep: 'Name, phone number, account ID' },
+      },
+      code: {
+        line: [['config.py · DB_PASSWORD = '], ['"s3cr3t-prod"', '[SECRET]'], [' · def billing_rules():']],
+        plain: { go: { api: 'no', cloud: 'care', local: 'yes' }, best: 'local', title: 'Strip the secrets first', text: 'Code often carries passwords and core business logic. Never send secrets, and keep the logic on infrastructure you control.', send: 'Nothing yet', keep: 'Passwords, keys, internal hostnames' },
+        red: { go: { api: 'care', cloud: 'yes', local: 'yes' }, best: 'cloud', title: 'Secrets out, then a private deployment', text: 'With credentials removed, a private deployment is a sensible default. A public API only with terms your security team has read.', send: 'Code without credentials', keep: 'Passwords, keys, internal hostnames' },
+      },
+      finance: {
+        line: [['Q3 results draft · revenue and margins · not yet announced']],
+        plain: { go: { api: 'no', cloud: 'no', local: 'yes' }, best: 'local', title: "Don't let it leave", text: 'Unreleased results are market-sensitive. Run the model next to the data, and log every access.', send: 'Nothing outside the building', keep: 'All of it, until it is announced' },
+      },
+    };
+    const BADGE = { yes: ['Yes', 'badge--green'], care: ['With care', 'badge--yellow'], no: ['No', ''] };
+    const lineEl = $('#recordLine'), redact = $('#redact'), redactLabel = $('#redactLabel');
+    const dests = $$('#dests .dest');
+    let kind = 'customers', lastBest = null;
+
+    function drawLine(k, masked, animate) {
+      lineEl.replaceChildren(...KINDS[k].line.map(([text, mask]) => {
+        const s = document.createElement('span');
+        s.textContent = text;
+        if (mask) { s.className = 'pii'; s.dataset.mask = mask; s.dataset.text = text; }
+        return s;
+      }));
+      if (!masked) return;
+      $$('.pii', lineEl).forEach(s => {
+        if (!animate || calm) { s.textContent = s.dataset.mask; s.classList.add('is-masked'); return; }
+        s.classList.add('is-sweeping');
+        setTimeout(() => { s.classList.remove('is-sweeping'); s.textContent = s.dataset.mask; s.classList.add('is-masked'); }, 380);
+      });
+    }
+
+    function render(animate = true) {
+      const K = KINDS[kind], canRedact = !!K.red;
+      redact.disabled = !canRedact;
+      if (!canRedact) redact.checked = false;
+      redactLabel.classList.toggle('is-off', !canRedact);
+      const v = redact.checked ? K.red : K.plain;
+      drawLine(kind, redact.checked, animate);
+      dests.forEach(d => {
+        const g = v.go[d.dataset.dest], node = $('.lesson-node', d), badge = $('.dest__badge', d);
+        const st = g === 'yes' ? 'done' : g === 'care' ? 'current' : 'locked';
+        if (node.dataset.state !== st) {
+          node.dataset.state = st;
+          node.dataset.progress = st === 'done' ? 2 : st === 'current' ? 1 : 0;
+          delete node.dataset.rendered;
+        }
+        badge.textContent = BADGE[g][0];
+        badge.className = 'badge badge--subtle dest__badge ' + BADGE[g][1];
+        d.classList.toggle('dest--best', d.dataset.dest === v.best);
+        d.classList.toggle('dest--no', g === 'no');
+      });
+      B.renderNodes($('#dests'));
+      $('#bvTitle').textContent = v.title;
+      $('#bvText').textContent = v.text;
+      $('#bvSend').textContent = v.send;
+      $('#bvKeep').textContent = v.keep;
+      if (animate && !calm && v.best !== lastBest) flyTo($(`.dest[data-dest="${v.best}"]`));
+      lastBest = v.best;
+    }
+
+    // a small packet leaves the record and lands on the best destination
+    function flyTo(dest) {
+      const a = lineEl.getBoundingClientRect(), b = $('.lesson-node', dest).getBoundingClientRect();
+      const p = document.createElement('span');
+      p.className = 'packet';
+      document.body.append(p);
+      const x0 = a.left + a.width / 2, y0 = a.top + a.height / 2, x1 = b.left + b.width / 2, y1 = b.top + b.height * .55;
+      p.animate([
+        { transform: `translate(${x0}px, ${y0}px) scale(.6)`, opacity: 0 },
+        { transform: `translate(${(x0 + x1) / 2}px, ${Math.min(y0, y1) - 60}px) scale(1)`, opacity: 1, offset: .5 },
+        { transform: `translate(${x1}px, ${y1}px) scale(.5)`, opacity: .9 },
+      ], { duration: 720, easing: 'cubic-bezier(.3, .7, .3, 1)' }).onfinish = () => {
+        p.remove();
+        $('.lesson-node', dest).animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: .4 }, { transform: 'none' }], { duration: 460, easing: 'cubic-bezier(.2, 1.1, .36, 1)' });
+      };
+    }
+
+    $$('#dataChips .chip').forEach(c => c.addEventListener('click', () => { kind = c.dataset.kind; render(); award('data-' + kind, 5); }));
+    redact.addEventListener('change', () => { render(); B.sfx.toggle(); award('redact', 10); });
+    render(false);
+  })();
 
   /* ── The quiz, a small lesson with a glowing feedback sheet ── */
   (function quiz() {

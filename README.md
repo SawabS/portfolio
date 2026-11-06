@@ -1,4 +1,4 @@
-# Portfolio — Sawab Aziz Hussein
+# Portfolio — Sawab Sarkavri
 
 A personal site built like an interactive course. Plain HTML, CSS and JavaScript, with no build step and no dependencies.
 
