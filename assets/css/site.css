@@ -32,17 +32,19 @@ body { overflow-x: clip; }
 .float-nav__bar { pointer-events: auto; gap: var(--space-4); background: color-mix(in srgb, var(--bg-primary) 88%, transparent); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); }
 .app-bar__brand { flex: none; gap: 10px; min-height: 40px; }
 /* the logo: a black circle with a white S, inverted in dark mode */
-.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--bg-inverse-primary); color: var(--text-inverse); font: 500 21px/1 var(--font-display); padding-top: 1px; transition: transform 520ms var(--spring); }
-.app-bar__brand:hover .brand-mark { transform: rotate(-14deg) scale(1.07); }
+/* the logo: a 3D coin with a white S, resting on a solid lip that sinks when pressed */
+.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; margin-top: 2px; border-radius: 50%; color: var(--white); font: 500 21px/1 var(--font-display); padding-top: 1px;
+  background: radial-gradient(circle at 34% 26%, #575757, #1f1f1f 58%, #111 100%);
+  box-shadow: 0 4px 0 0 #000, inset 0 0 0 2px rgba(255, 255, 255, .13), inset 0 -3px 0 rgba(0, 0, 0, .35);
+  transform: translateY(-2px); transition: transform var(--dur-press) ease-out, box-shadow var(--dur-press) ease-out; }
+.app-bar__brand:hover .brand-mark { transform: translateY(-4px) rotate(-8deg); box-shadow: 0 6px 0 0 #000, inset 0 0 0 2px rgba(255, 255, 255, .13), inset 0 -3px 0 rgba(0, 0, 0, .35); transition-duration: 300ms; transition-timing-function: var(--spring); }
+.app-bar__brand:active .brand-mark { transform: translateY(2px); box-shadow: 0 0 0 0 #000, inset 0 0 0 2px rgba(255, 255, 255, .13); transition-duration: var(--dur-press); }
+[data-theme="dark"] .brand-mark { color: #111; background: radial-gradient(circle at 34% 26%, #fff, #e6e6e6 58%, #cfcfcf 100%); box-shadow: 0 4px 0 0 #8c8c8c, inset 0 0 0 2px rgba(0, 0, 0, .06), inset 0 -3px 0 rgba(0, 0, 0, .12); }
+[data-theme="dark"] .app-bar__brand:hover .brand-mark { box-shadow: 0 6px 0 0 #8c8c8c, inset 0 0 0 2px rgba(0, 0, 0, .06), inset 0 -3px 0 rgba(0, 0, 0, .12); }
+[data-theme="dark"] .app-bar__brand:active .brand-mark { box-shadow: 0 0 0 0 #8c8c8c; }
 .brand-name { font: var(--ts-heading-md); white-space: nowrap; }
 @media (max-width: 440px) { .brand-name__sur { display: none; } }
 .float-nav__bar { justify-content: space-between; }
-.nav-cv { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px 0 11px; margin-right: var(--space-1); border: 2px solid var(--border-primary); border-radius: var(--radius-full); color: var(--text-primary); font: var(--ts-ui-actions-base); text-decoration: none; transition: border-color var(--dur-fast), background-color var(--dur-fast), transform var(--dur-press) ease-out; }
-.nav-cv svg { width: 20px; height: 20px; transition: transform 420ms var(--spring); }
-.nav-cv:hover { border-color: var(--border-hover); text-decoration: none; }
-.nav-cv:hover svg { transform: translateY(-2px) rotate(-6deg); }
-.nav-cv:active { transform: translateY(2px); }
-@media (max-width: 520px) { .nav-cv { width: 40px; padding: 0; justify-content: center; } .nav-cv__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } }
 .app-bar__brand:hover { text-decoration: none; }
 .nav-actions { display: flex; align-items: center; gap: 2px; flex: none; }
 .nav-actions .xp { margin-right: var(--space-1); min-width: 46px; justify-content: center; }

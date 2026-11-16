@@ -13,10 +13,7 @@
     if (earned.has(key)) return;
     earned.add(key);
     xp += n;
-    $('#xpN').textContent = xp;
-    $('#xpFinal').textContent = xp;
-    const chip = $('#xp');
-    chip.classList.remove('xp--pulse'); void chip.offsetWidth; chip.classList.add('xp--pulse');
+    $('#xpFinal').textContent = xp;   // shown once, at the end of the quiz
   }
 
   function toast(msg) {
